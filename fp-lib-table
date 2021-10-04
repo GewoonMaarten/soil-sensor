@@ -1,0 +1,4 @@
+(fp_lib_table
+  (lib (name "Proant")(type "KiCad")(uri "${KIPRJMOD}/modules/Proant.pretty")(options "")(descr ""))
+  (lib (name "Soil_Sensor")(type "KiCad")(uri "${KIPRJMOD}/modules/Soil_Sensor.pretty")(options "")(descr ""))
+)
