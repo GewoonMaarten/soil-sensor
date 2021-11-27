@@ -45,7 +45,7 @@
         "silk_text_upright": false,
         "zones": {
           "45_degree_only": false,
-          "min_clearance": 1.0
+          "min_clearance": 0.16999999999999998
         }
       },
       "diff_pair_dimensions": [
@@ -424,11 +424,11 @@
           "/TXD",
           "GND",
           "Net-(C3-Pad1)",
+          "Net-(D1-Pad1)",
+          "Net-(D1-Pad2)",
           "Net-(JP1-Pad2)",
           "Net-(L1-Pad2)",
-          "unconnected-(U1-Pad3)",
-          "unconnected-(U1-Pad4)",
-          "unconnected-(U1-Pad7)",
+          "unconnected-(U1-Pad5)",
           "unconnected-(U3-Pad10)",
           "unconnected-(U3-Pad11)",
           "unconnected-(U3-Pad12)",
@@ -450,7 +450,6 @@
           "unconnected-(U3-Pad34)",
           "unconnected-(U3-Pad35)",
           "unconnected-(U3-Pad36)",
-          "unconnected-(U3-Pad38)",
           "unconnected-(U3-Pad44)",
           "unconnected-(U3-Pad45)",
           "unconnected-(U3-Pad47)",
@@ -469,7 +468,7 @@
       },
       {
         "bus_width": 12.0,
-        "clearance": 0.1,
+        "clearance": 1.0,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.25,
