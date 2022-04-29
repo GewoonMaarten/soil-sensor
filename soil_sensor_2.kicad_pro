@@ -89,6 +89,7 @@
         "silk_over_copper": "warning",
         "silk_overlap": "warning",
         "skew_out_of_range": "error",
+        "through_hole_pad_without_hole": "error",
         "too_many_vias": "error",
         "track_dangling": "warning",
         "track_width": "error",
@@ -356,7 +357,9 @@
     "pinned_footprint_libs": [
       "Soil_Sensor"
     ],
-    "pinned_symbol_libs": []
+    "pinned_symbol_libs": [
+      "Soil_Sensor"
+    ]
   },
   "meta": {
     "filename": "soil_sensor_2.kicad_pro",
@@ -419,16 +422,16 @@
           "/BOOT",
           "/EN",
           "/RXD",
-          "/SCL",
-          "/SDA",
+          "/SCL_{0}",
+          "/SCL_{1}",
+          "/SDA_{0}",
+          "/SDA_{1}",
           "/TXD",
           "GND",
           "Net-(C3-Pad1)",
           "Net-(D1-Pad1)",
           "Net-(D1-Pad2)",
-          "Net-(JP1-Pad2)",
           "Net-(L1-Pad2)",
-          "unconnected-(U1-Pad5)",
           "unconnected-(U3-Pad10)",
           "unconnected-(U3-Pad11)",
           "unconnected-(U3-Pad12)",
@@ -441,8 +444,6 @@
           "unconnected-(U3-Pad25)",
           "unconnected-(U3-Pad26)",
           "unconnected-(U3-Pad27)",
-          "unconnected-(U3-Pad28)",
-          "unconnected-(U3-Pad29)",
           "unconnected-(U3-Pad30)",
           "unconnected-(U3-Pad31)",
           "unconnected-(U3-Pad32)",
@@ -468,7 +469,7 @@
       },
       {
         "bus_width": 12.0,
-        "clearance": 1.0,
+        "clearance": 0.5,
         "diff_pair_gap": 0.25,
         "diff_pair_via_gap": 0.25,
         "diff_pair_width": 0.25,
@@ -500,7 +501,7 @@
       "idf": "",
       "netlist": "",
       "specctra_dsn": "",
-      "step": "",
+      "step": "../../../../Downloads/soil_sensor_2.step",
       "vrml": ""
     },
     "page_layout_descr_file": ""
@@ -540,7 +541,7 @@
       "workbook_filename": ""
     },
     "page_layout_descr_file": "",
-    "plot_directory": "",
+    "plot_directory": "output/",
     "spice_adjust_passive_values": false,
     "spice_external_command": "spice \"%I\"",
     "subpart_first_id": 65,

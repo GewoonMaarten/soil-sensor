@@ -1,5 +1,4 @@
 (sym_lib_table
-  (lib (name "Proant440")(type "Legacy")(uri "/home/maarten/Workspace/Personal/kicad/soil_sensor_2/library/PRO-OB-440.lib")(options "")(descr ""))
-  (lib (name "soil_sensor_2-rescue")(type "Legacy")(uri "${KIPRJMOD}/soil_sensor_2-rescue.lib")(options "")(descr ""))
   (lib (name "Soil_Sensor")(type "KiCad")(uri "${KIPRJMOD}/library/Soil_Sensor.kicad_sym")(options "")(descr ""))
+  (lib (name "Molex_picoblade")(type "KiCad")(uri "${KIPRJMOD}/library/532610471.kicad_sym")(options "")(descr ""))
 )
