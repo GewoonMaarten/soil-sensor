@@ -9,15 +9,15 @@
     "idf.toolsPath": "/opt/esp",
     "idf.espIdfPath": "/opt/esp/idf",
     "idf.pythonBinPath": "/opt/esp/python_env/idf4.4_py3.6_env/bin/python",
-    "idf.port": "/dev/ttyUSB0",
+    "idf.port": "/dev/ttyUSB1",
     "terminal.integrated.defaultProfile.linux": "bash"
   },
   // Install relevant extensions in the dev container
   "extensions": [
     "ms-vscode.cpptools-extension-pack",
-    "espressif.esp-idf-extension",
+    "espressif.esp-idf-extension"
   ],
   "userEnvProbe": "loginInteractiveShell",
   // Forward serial device to enable flash & monitor
-  "runArgs": ["--device=/dev/ttyUSB0"]
+  "runArgs": ["--privileged"]
 }
