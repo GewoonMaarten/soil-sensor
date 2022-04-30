@@ -1,0 +1,11 @@
+config SLEEP_TIME
+    int "Time to sleep (in minutes)"
+    range 1 1440
+    default 240
+    help
+        When BLE advertising is finished (sucessfully or not) the ESP32 will sleep.
+        This configuration determines for how long in minutes.
+
+config DEVICE_NAME
+    string "BLE device name"
+    default "ble_sensor"
