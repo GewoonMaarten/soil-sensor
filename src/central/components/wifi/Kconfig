@@ -1,0 +1,11 @@
+menu "central-config"
+    config WIFI_SSID
+        string "WiFi SSID"
+        help
+            SSID (network name) for the example to connect to.
+
+    config WIFI_PASS
+        string "WiFi Password"
+        help
+            WiFi password (WPA or WPA2) for the example to use.
+endmenu
