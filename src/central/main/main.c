@@ -66,35 +66,6 @@ static int blecent_gap_event(struct ble_gap_event *event, void *arg);
 void ble_store_config_init(void);
 static esp_mqtt_client_handle_t mqtt_client;
 
-static void
-http_post_data(char *addr, int voltage, uint16_t m1, uint16_t m2, uint16_t m3)
-{
-    esp_http_client_config_t config = {
-        .url = "http://storage-1.lan:8086/write?db=telegraf&precision=s&u=telegraf&p=metricsmetricsmetrics",
-        .method = HTTP_METHOD_POST,
-    };
-    esp_http_client_handle_t client = esp_http_client_init(&config);
-
-    char data[128];
-    snprintf(data, 128, "sensors,device=soil_sensor,addr=%s voltage=%di,moisture1=%d,moisture2=%d,moisture3=%d", addr, voltage, m1, m2, m3);
-
-    esp_http_client_set_post_field(client, data, strlen(data));
-    esp_err_t err = esp_http_client_perform(client);
-    if (err == ESP_OK)
-    {
-        ESP_LOGI(tag, "HTTP POST Status = %d, content_length = %d",
-                 esp_http_client_get_status_code(client),
-                 esp_http_client_get_content_length(client));
-    }
-    else
-    {
-        ESP_LOGE(tag, "HTTP POST request failed: %s", esp_err_to_name(err));
-    }
-
-    esp_http_client_close(client);
-    esp_http_client_cleanup(client);
-}
-
 /**
  * Application callback.  Called when the read of the ANS Supported New Alert
  * Category characteristic has completed.
