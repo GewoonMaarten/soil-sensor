@@ -969,4 +969,4 @@ struct bme68x_dev
 };
 
 #endif /* BME68X_DEFS_H_ */
-/*! @endcond */
+       /*! @endcond */

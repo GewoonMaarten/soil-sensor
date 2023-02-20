@@ -38,7 +38,6 @@
 
 #include "bme68x.h"
 #include <stdio.h>
-// #include <sys/printk.h>
 
 /* This internal API is used to read the calibration coefficients */
 static int8_t get_calib_data(struct bme68x_dev *dev);
