@@ -66,6 +66,60 @@ static int blecent_gap_event(struct ble_gap_event *event, void *arg);
 void ble_store_config_init(void);
 static esp_mqtt_client_handle_t mqtt_client;
 
+cJSON *mqtt_discovery_device(const char *id, const char *model, const char *name)
+{
+    cJSON *device = cJSON_CreateObject();
+    cJSON *identifiers = cJSON_AddArrayToObject(device, "ids");
+    cJSON_AddItemToArray(identifiers, cJSON_CreateString(id));
+    cJSON_AddStringToObject(device, "mf", "Maarten de Klerk");
+    cJSON_AddStringToObject(device, "mdl", model);
+    cJSON_AddStringToObject(device, "name", name);
+    return device;
+}
+
+cJSON *mqtt_discovery_sensor(cJSON *device, const char *name, const char *state_topic, const char *unit_of_measurement,
+                             const char *device_class, const char *icon)
+{
+    size_t name_length = strlen(name);
+    size_t state_topic_length = strlen(state_topic);
+
+    size_t value_template_length = 16 + name_length;
+    size_t state_topic_template_length = 28 + state_topic_length;
+
+    char value_template[value_template_length];
+    char topic_template[state_topic_template_length];
+
+    snprintf(value_template, value_template_length, "{{ value_json.%s }}", name);
+    snprintf(topic_template, state_topic_template_length, "homeassistant/sensor/%s/state", state_topic);
+
+    cJSON *payload = cJSON_CreateObject();
+    cJSON_AddStringToObject(payload, "stat_cla", "measurement");
+    cJSON_AddStringToObject(payload, "stat_t", topic_template);
+    cJSON_AddItemToObject(payload, "dev", device);
+    cJSON_AddNumberToObject(payload, "qos", 1);
+    cJSON_AddBoolToObject(payload, "frc_upd", true);
+    cJSON_AddNumberToObject(payload, "exp_aft", 1000);
+    cJSON_AddStringToObject(payload, "val_tpl", value_template);
+    cJSON_AddStringToObject(payload, "name", name);
+
+    if (device_class != NULL)
+    {
+        cJSON_AddStringToObject(payload, "dev_cla", device_class);
+    }
+
+    if (unit_of_measurement != NULL)
+    {
+        cJSON_AddStringToObject(payload, "unit_of_meas", unit_of_measurement);
+    }
+
+    if (icon != NULL)
+    {
+        cJSON_AddStringToObject(payload, "icon", icon);
+    }
+
+    return payload;
+}
+
 /**
  * Application callback.  Called when the read of the ANS Supported New Alert
  * Category characteristic has completed.
@@ -115,26 +169,8 @@ blecent_on_read(uint16_t conn_handle,
         snprintf(config_topic, 62 + 7 + 1, "homeassistant/sensor/%s/config", sensor_unique_id);
         snprintf(device_name, 23 + 1, "Plant %s", device_addr);
 
-        // Create device JSON
-        cJSON *device = cJSON_CreateObject();
-        cJSON *identifiers = cJSON_AddArrayToObject(device, "identifiers");
-        cJSON_AddItemToArray(identifiers, cJSON_CreateString(device_addr));
-        cJSON_AddStringToObject(device, "manufacturer", "Maarten de Klerk");
-        cJSON_AddStringToObject(device, "model", "BLE Soil Sensor");
-        cJSON_AddStringToObject(device, "name", device_name);
-
-        // Create payload JSON
-        cJSON *payload = cJSON_CreateObject();
-        cJSON_AddStringToObject(payload, "state_class", "measurement");
-        cJSON_AddStringToObject(payload, "state_topic", state_topic);
-        cJSON_AddItemToObject(payload, "device", device);
-        cJSON_AddNumberToObject(payload, "qos", 1);
-        cJSON_AddBoolToObject(payload, "force_update", true);
-        cJSON_AddNumberToObject(payload, "expire_after", 1000);
-        cJSON_AddStringToObject(payload, "value_template", sensor_value_template);
-        cJSON_AddStringToObject(payload, "unique_id", sensor_unique_id);
-        cJSON_AddStringToObject(payload, "name", sensor_names[i]);
-        cJSON_AddStringToObject(payload, "icon", "mdi:water-percent");
+        cJSON *device = mqtt_discovery_device(device_addr, "BLE Soil Sensor", device_name);
+        cJSON *payload = mqtt_discovery_sensor(device, sensor_names[i], device_addr, NULL, NULL, "mdi:water-percent");
 
         char *payload_string = cJSON_PrintUnformatted(payload);
         printf(payload_string);
@@ -589,57 +625,29 @@ void vtask_upload_bme68x_measurement(void *pv_parameters)
 {
     for (;;)
     {
-        cJSON *device = cJSON_CreateObject();
-        cJSON *identifiers = cJSON_AddArrayToObject(device, "identifiers");
-        cJSON_AddItemToArray(identifiers, cJSON_CreateString("test 1"));
-        cJSON_AddStringToObject(device, "manufacturer", "Maarten de Klerk");
-        cJSON_AddStringToObject(device, "model", "BLE Central");
-        cJSON_AddStringToObject(device, "name", "BLE Central 1");
+        const char *state_topic = "ble_central_1";
+        const char *humidity_sensor_name = "humidity";
+        const char *temperature_sensor_name = "temperature";
 
-        cJSON *payload = cJSON_CreateObject();
-        cJSON_AddStringToObject(payload, "device_class", "temperature");
-        cJSON_AddStringToObject(payload, "state_topic", "homeassistant/sensor/ble_central_1/state");
-        cJSON_AddItemToObject(payload, "device", device);
-        cJSON_AddNumberToObject(payload, "qos", 1);
-        cJSON_AddBoolToObject(payload, "force_update", true);
-        cJSON_AddNumberToObject(payload, "expire_after", 1000);
-        cJSON_AddStringToObject(payload, "value_template", "{{ value_json.temperature }}");
-        cJSON_AddStringToObject(payload, "unit_of_measurement", "°C");
-        cJSON_AddStringToObject(payload, "name", "temperature");
+        cJSON *device = mqtt_discovery_device("test 1", "BLE Central", "BLE Central 1");
+        cJSON *payload = mqtt_discovery_sensor(device, temperature_sensor_name, state_topic, "°C", "temperature", NULL);
 
         char *payload_string = cJSON_PrintUnformatted(payload);
         esp_mqtt_client_publish(mqtt_client, "homeassistant/sensor/ble_central_1_t/config", payload_string, 0, 1, 0);
         cJSON_Delete(payload);
 
-        device = cJSON_CreateObject();
-        identifiers = cJSON_AddArrayToObject(device, "identifiers");
-        cJSON_AddItemToArray(identifiers, cJSON_CreateString("test 1"));
-        cJSON_AddStringToObject(device, "manufacturer", "Maarten de Klerk");
-        cJSON_AddStringToObject(device, "model", "BLE Central");
-        cJSON_AddStringToObject(device, "name", "BLE Central 1");
-
-        payload = cJSON_CreateObject();
-        cJSON_AddStringToObject(payload, "device_class", "humidity");
-        cJSON_AddStringToObject(payload, "state_topic", "homeassistant/sensor/ble_central_1/state");
-        cJSON_AddItemToObject(payload, "device", device);
-        cJSON_AddNumberToObject(payload, "qos", 1);
-        cJSON_AddBoolToObject(payload, "force_update", true);
-        cJSON_AddNumberToObject(payload, "expire_after", 1000);
-        cJSON_AddStringToObject(payload, "value_template", "{{ value_json.humidity }}");
-        cJSON_AddStringToObject(payload, "unit_of_measurement", "%");
-        cJSON_AddStringToObject(payload, "name", "humidity");
+        device = mqtt_discovery_device("test 1", "BLE Central", "BLE Central 1");
+        payload = mqtt_discovery_sensor(device, humidity_sensor_name, state_topic, "%", "humidity", NULL);
 
         payload_string = cJSON_PrintUnformatted(payload);
         esp_mqtt_client_publish(mqtt_client, "homeassistant/sensor/ble_central_1_h/config", payload_string, 0, 1, 0);
         cJSON_Delete(payload);
 
         payload = cJSON_CreateObject();
-        cJSON_AddNumberToObject(payload, "temperature", data.temperature);
-        cJSON_AddNumberToObject(payload, "humidity", data.humidity);
+        cJSON_AddNumberToObject(payload, temperature_sensor_name, data.temperature);
+        cJSON_AddNumberToObject(payload, humidity_sensor_name, data.humidity);
 
         payload_string = cJSON_PrintUnformatted(payload);
-        printf(payload_string);
-        printf("\n");
         esp_mqtt_client_publish(mqtt_client, "homeassistant/sensor/ble_central_1/state", payload_string, 0, 1, 0);
         cJSON_Delete(payload);
 
@@ -648,6 +656,8 @@ void vtask_upload_bme68x_measurement(void *pv_parameters)
         // vTaskDelay((1000) / portTICK_PERIOD_MS);
     }
 }
+
+static const char *TAG = "MQTT_EXAMPLE";
 
 void app_main(void)
 {
@@ -683,6 +693,7 @@ void app_main(void)
 
     esp_mqtt_client_config_t mqtt_config = {
         .uri = "mqtt://192.168.1.245:1883",
+
     };
     mqtt_client = esp_mqtt_client_init(&mqtt_config);
     esp_mqtt_client_start(mqtt_client);
