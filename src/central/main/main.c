@@ -80,27 +80,35 @@ cJSON *mqtt_discovery_device(const char *id, const char *model, const char *name
 cJSON *mqtt_discovery_sensor(cJSON *device, const char *name, const char *state_topic, const char *unit_of_measurement,
                              const char *device_class, const char *icon)
 {
+    const char *value_template_template = "{{ value_json.%s }}";
+    const char *state_topic_template = "homeassistant/sensor/%s/state";
+    const char *sensor_unique_id_template = "%s_%s";
+
     size_t name_length = strlen(name);
     size_t state_topic_length = strlen(state_topic);
-
-    size_t value_template_length = 16 + name_length;
-    size_t state_topic_template_length = 28 + state_topic_length;
+    size_t value_template_length = (strlen(value_template_template) - 1) + name_length;
+    size_t state_topic_template_length = (strlen(state_topic_template) - 1) + state_topic_length;
+    size_t sensor_unique_id_template_length = state_topic_length + (strlen(sensor_unique_id_template) - 2) + name_length;
 
     char value_template[value_template_length];
-    char topic_template[state_topic_template_length];
+    char topic[state_topic_template_length];
+    char sensor_unique_id[sensor_unique_id_template_length];
 
-    snprintf(value_template, value_template_length, "{{ value_json.%s }}", name);
-    snprintf(topic_template, state_topic_template_length, "homeassistant/sensor/%s/state", state_topic);
+    snprintf(sensor_unique_id, sensor_unique_id_template_length, sensor_unique_id_template, state_topic, name);
+    snprintf(value_template, value_template_length, value_template_template, name);
+    snprintf(topic, state_topic_template_length, state_topic_template, state_topic);
 
     cJSON *payload = cJSON_CreateObject();
     cJSON_AddStringToObject(payload, "stat_cla", "measurement");
-    cJSON_AddStringToObject(payload, "stat_t", topic_template);
+    cJSON_AddStringToObject(payload, "stat_t", topic);
     cJSON_AddItemToObject(payload, "dev", device);
     cJSON_AddNumberToObject(payload, "qos", 1);
     cJSON_AddBoolToObject(payload, "frc_upd", true);
     cJSON_AddNumberToObject(payload, "exp_aft", 1000);
     cJSON_AddStringToObject(payload, "val_tpl", value_template);
     cJSON_AddStringToObject(payload, "name", name);
+    cJSON_AddStringToObject(payload, "uniq_id", sensor_unique_id);
+    cJSON_AddStringToObject(payload, "obj_id", sensor_unique_id);
 
     if (device_class != NULL)
     {
@@ -155,7 +163,7 @@ blecent_on_read(uint16_t conn_handle,
         {"soilSensorLevel2"},
         {"soilSensorLevel3"},
     };
-    char sensor_value_template[35 + 1];
+
     char sensor_unique_id[37 + 1];
     char state_topic[44 + 1];
     char config_topic[62 + 1];
@@ -163,10 +171,9 @@ blecent_on_read(uint16_t conn_handle,
 
     for (uint8_t i = 0; i < 3; i++)
     {
-        snprintf(sensor_value_template, 35 + 1, "{{ value_json.%s}}", sensor_names[i]);
         snprintf(sensor_unique_id, 37 + 1, "%s_%s", device_addr, sensor_names[i]);
         snprintf(state_topic, 45, "homeassistant/sensor/%s/state", device_addr);
-        snprintf(config_topic, 62 + 7 + 1, "homeassistant/sensor/%s/config", sensor_unique_id);
+        snprintf(config_topic, 66 + 1, "homeassistant/sensor/%s/config", sensor_unique_id);
         snprintf(device_name, 23 + 1, "Plant %s", device_addr);
 
         cJSON *device = mqtt_discovery_device(device_addr, "BLE Soil Sensor", device_name);
@@ -631,14 +638,12 @@ void vtask_upload_bme68x_measurement(void *pv_parameters)
 
         cJSON *device = mqtt_discovery_device("test 1", "BLE Central", "BLE Central 1");
         cJSON *payload = mqtt_discovery_sensor(device, temperature_sensor_name, state_topic, "°C", "temperature", NULL);
-
         char *payload_string = cJSON_PrintUnformatted(payload);
         esp_mqtt_client_publish(mqtt_client, "homeassistant/sensor/ble_central_1_t/config", payload_string, 0, 1, 0);
         cJSON_Delete(payload);
 
         device = mqtt_discovery_device("test 1", "BLE Central", "BLE Central 1");
         payload = mqtt_discovery_sensor(device, humidity_sensor_name, state_topic, "%", "humidity", NULL);
-
         payload_string = cJSON_PrintUnformatted(payload);
         esp_mqtt_client_publish(mqtt_client, "homeassistant/sensor/ble_central_1_h/config", payload_string, 0, 1, 0);
         cJSON_Delete(payload);
@@ -646,18 +651,14 @@ void vtask_upload_bme68x_measurement(void *pv_parameters)
         payload = cJSON_CreateObject();
         cJSON_AddNumberToObject(payload, temperature_sensor_name, data.temperature);
         cJSON_AddNumberToObject(payload, humidity_sensor_name, data.humidity);
-
         payload_string = cJSON_PrintUnformatted(payload);
         esp_mqtt_client_publish(mqtt_client, "homeassistant/sensor/ble_central_1/state", payload_string, 0, 1, 0);
         cJSON_Delete(payload);
 
         // wait 10 minutes until next measurement
         vTaskDelay((10 * 60 * 1000) / portTICK_PERIOD_MS);
-        // vTaskDelay((1000) / portTICK_PERIOD_MS);
     }
 }
-
-static const char *TAG = "MQTT_EXAMPLE";
 
 void app_main(void)
 {
