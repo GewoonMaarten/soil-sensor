@@ -1,6 +1,6 @@
 # soil-sensor 🌱
 Schematic and PCB for a capacitive soil moisture sensor.
 
-![latest release](../../releases/latest/download/render.png)
+![latest release](docs/soil_sensor_2.png)
 
 **See [latest release](../../releases/latest) for schematic and gerbers.**
