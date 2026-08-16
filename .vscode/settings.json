@@ -5,5 +5,8 @@
         "array": "c",
         "string": "c",
         "string_view": "c"
-    }
+    },
+    "nrf-connect.applications": [
+        "${workspaceFolder}/src/sensor"
+    ]
 }

@@ -1,0 +1,9 @@
+#pragma once
+
+#include <stdint.h>
+
+#define SOIL_SENSOR_AUTH_KEY_SIZE 16U
+
+static const uint8_t soil_sensor_auth_key[SOIL_SENSOR_AUTH_KEY_SIZE] = {
+	@SOIL_SENSOR_AUTH_KEY_INITIALIZER@
+};

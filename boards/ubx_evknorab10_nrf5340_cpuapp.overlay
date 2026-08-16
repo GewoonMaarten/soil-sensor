@@ -1,0 +1,11 @@
+/* For more help, browse the devicetree documentation at https://docs.zephyrproject.org/latest/build/dts/index.html
+ * You can also visit the nRF DeviceTree extension documentation at https://docs.nordicsemi.com/bundle/nrf-connect-vscode/page/guides/ncs_configure_app.html#devicetree-support-in-the-extension
+ */
+
+ &i2c1 {
+	soil_sensor: soil_sensor@50 {
+		compatible = "i2c-device";
+		reg = <0x50>;
+		label = "FDC1004";
+	};
+ };
