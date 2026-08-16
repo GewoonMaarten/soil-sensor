@@ -1,0 +1,4 @@
+(fp_lib_table
+	(version 7)
+	(lib (name "Soil_Sensor") (type "KiCad") (uri "/home/maarten/dev/Personal/soil-sensor/pcb/libraries/Soil_Sensor.pretty") (options "") (descr ""))
+)
