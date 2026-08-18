@@ -3,6 +3,13 @@ find_package(Zephyr REQUIRED HINTS $ENV{ZEPHYR_BASE})
 
 project(blinky)
 
+get_filename_component(SOIL_SENSOR_REPO_ROOT "${CMAKE_CURRENT_LIST_DIR}/../../../.." ABSOLUTE)
+set(SOIL_SENSOR_FIRMWARE_LIBS_DIR "${SOIL_SENSOR_REPO_ROOT}/firmware-libs")
+add_subdirectory(
+    ${SOIL_SENSOR_FIRMWARE_LIBS_DIR}
+    ${CMAKE_CURRENT_BINARY_DIR}/firmware-libs
+)
+
 set(SOIL_SENSOR_DEFAULT_AUTH_KEY_HEX "2a5df318c74091e653ac743910bd86cf")
 set(SOIL_SENSOR_AUTH_KEY_HEX "$ENV{SOIL_SENSOR_AUTH_KEY_HEX}" CACHE STRING
     "16-byte HMAC key as 32 hex chars")
@@ -30,17 +37,19 @@ foreach(key_byte IN LISTS SOIL_SENSOR_AUTH_KEY_BYTE_LIST)
 endforeach()
 
 configure_file(
-    ${CMAKE_CURRENT_SOURCE_DIR}/soil_sensor_auth_key.h.in
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/soil_sensor_auth_key.h.in
     ${CMAKE_CURRENT_BINARY_DIR}/generated/soil_sensor_auth_key.h
     @ONLY
 )
 
 target_include_directories(app PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated)
+target_include_directories(app PRIVATE
+    ${CMAKE_CURRENT_SOURCE_DIR}/include
+)
 
 target_sources(app PRIVATE 
-    fdc1004.c
-    fdc1004.h
-    main.c
-    soil_sensor.c
-    soil_sensor.h
+    src/main.c
+    src/soil_sensor.c
 )
+
+target_link_libraries(app PRIVATE fw_fdc1004)
