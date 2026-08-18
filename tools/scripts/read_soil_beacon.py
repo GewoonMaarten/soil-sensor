@@ -11,7 +11,6 @@ The firmware advertises authenticated manufacturer data with:
 - company_id (optional in parser; scanner may expose it separately)
 - device_id
 - boot_nonce
-- sample_counter
 - three little-endian signed 32-bit raw measurements
 - truncated HMAC-SHA256 authentication tag
 """
@@ -31,8 +30,10 @@ from bleak import BleakScanner
 
 DEFAULT_COMPANY_ID = 0xFFFF
 DEFAULT_AUTH_KEY_HEX = "2a5df318c74091e653ac743910bd86cf"
-FULL_PAYLOAD_FMT = "<HHIH3iI"
-NO_COMPANY_PAYLOAD_FMT = "<HIH3iI"
+
+# https://docs.python.org/3/library/struct.html#format-characters
+FULL_PAYLOAD_FMT = "<HHI3iI"
+NO_COMPANY_PAYLOAD_FMT = "<HI3iI"
 TAG_SIZE = 4
 MAX_RECENT_BOOT_NONCES = 16
 
@@ -42,7 +43,6 @@ class BeaconPacket:
     company_id: int
     device_id: int
     boot_nonce: int
-    sample_counter: int
     raw_values: tuple[int, int, int]
     auth_tag: bytes
     signed_payload: bytes
@@ -51,7 +51,6 @@ class BeaconPacket:
 @dataclass(slots=True)
 class FreshnessState:
     current_boot_nonce: int
-    last_counter: int
     seen_boot_nonces: deque[int] = field(default_factory=lambda: deque(maxlen=MAX_RECENT_BOOT_NONCES))
 
 
@@ -108,8 +107,7 @@ def decode_payload(company_id: int, payload: bytes) -> BeaconPacket | None:
             company_id=embedded_company_id,
             device_id=parsed[1],
             boot_nonce=parsed[2],
-            sample_counter=parsed[3],
-            raw_values=(parsed[4], parsed[5], parsed[6]),
+            raw_values=(parsed[3], parsed[4], parsed[5]),
             auth_tag=auth_tag,
             signed_payload=signed_payload,
         )
@@ -122,8 +120,7 @@ def decode_payload(company_id: int, payload: bytes) -> BeaconPacket | None:
             company_id=company_id,
             device_id=parsed[0],
             boot_nonce=parsed[1],
-            sample_counter=parsed[2],
-            raw_values=(parsed[3], parsed[4], parsed[5]),
+            raw_values=(parsed[2], parsed[3], parsed[4]),
             auth_tag=auth_tag,
             signed_payload=signed_payload,
         )
@@ -139,15 +136,10 @@ def has_valid_auth_tag(packet: BeaconPacket, auth_key: bytes) -> bool:
 def freshness_status(packet: BeaconPacket, states: dict[int, FreshnessState]) -> str:
     state = states.get(packet.device_id)
     if state is None:
-        states[packet.device_id] = FreshnessState(packet.boot_nonce, packet.sample_counter)
+        states[packet.device_id] = FreshnessState(packet.boot_nonce)
         return "fresh"
-
+    
     if packet.boot_nonce == state.current_boot_nonce:
-        if packet.sample_counter > state.last_counter:
-            state.last_counter = packet.sample_counter
-            return "fresh"
-        if packet.sample_counter == state.last_counter:
-            return "duplicate"
         return "stale"
 
     if packet.boot_nonce in state.seen_boot_nonces:
@@ -155,11 +147,13 @@ def freshness_status(packet: BeaconPacket, states: dict[int, FreshnessState]) ->
 
     state.seen_boot_nonces.append(state.current_boot_nonce)
     state.current_boot_nonce = packet.boot_nonce
-    state.last_counter = packet.sample_counter
     return "fresh_new_boot"
 
 
 async def main() -> None:
+    stop_event = asyncio.Event()
+
+
     args = parse_args()
     auth_key: bytes = args.auth_key_hex
 
@@ -190,7 +184,7 @@ async def main() -> None:
             return
 
         freshness = freshness_status(packet, freshness_states)
-        if freshness in ("duplicate", "stale", "replayed_boot_nonce"):
+        if freshness in ("replayed_boot_nonce", "stale"):
             return
 
         print(
@@ -198,18 +192,12 @@ async def main() -> None:
             f"{device.address} rssi={advertisement_data.rssi} "
             f"dev=0x{packet.device_id:04X} "
             f"boot=0x{packet.boot_nonce:08X} "
-            f"ctr={packet.sample_counter} "
             f"freshness={freshness} "
             f"raw0={packet.raw_values[0]} raw1={packet.raw_values[1]} raw2={packet.raw_values[2]}"
         )
 
-    scanner = BleakScanner(detection_callback=detection_callback)
-
-    while True:
-        await scanner.start()
-        await asyncio.sleep(args.timeout)
-        await scanner.stop()
-
+    async with BleakScanner(detection_callback=detection_callback) as scanner:
+        await stop_event.wait()
 
 if __name__ == "__main__":
     asyncio.run(main())

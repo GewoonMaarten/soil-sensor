@@ -32,7 +32,6 @@ struct soil_sensor_adv_payload
 	uint16_t company_id;
 	uint16_t device_id;
 	uint32_t boot_nonce;
-	uint16_t sample_counter;
 	int32_t raw[SOIL_SENSOR_COUNT];
 	uint32_t auth_tag;
 } __packed;
@@ -163,7 +162,6 @@ static int soil_sensor_adv_update(void)
 
 	adv_payload.device_id = soil_sensor_read_device_id();
 	adv_payload.boot_nonce = soil_sensor_new_boot_nonce();
-	adv_payload.sample_counter = 0U;
 
 	for (size_t i = 0; i < SOIL_SENSOR_COUNT; ++i)
 	{
