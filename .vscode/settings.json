@@ -7,6 +7,6 @@
         "string_view": "c"
     },
     "nrf-connect.applications": [
-        "${workspaceFolder}/src/sensor"
+        "${workspaceFolder}/devices/soil-sensor/firmware/v1"
     ]
 }

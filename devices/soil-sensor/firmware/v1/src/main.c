@@ -153,28 +153,6 @@ static int soil_sensor_adv_sign(void)
 
 static int soil_sensor_adv_update(void)
 {
-	adv_payload.sample_counter++;
-	if (adv_payload.sample_counter == 0U)
-	{
-		adv_payload.boot_nonce = soil_sensor_new_boot_nonce();
-	}
-
-	for (size_t i = 0; i < SOIL_SENSOR_COUNT; ++i)
-	{
-		adv_payload.raw[i] = soil_sensor_get_raw(i);
-	}
-
-	int ret = soil_sensor_adv_sign();
-	if (ret < 0)
-	{
-		return ret;
-	}
-
-	return bt_le_adv_update_data(ad, ARRAY_SIZE(ad), NULL, 0);
-}
-
-static int soil_sensor_adv_seed(void)
-{
 	int ret;
 
 	ret = soil_sensor_crypto_init();
@@ -198,66 +176,45 @@ static int soil_sensor_adv_seed(void)
 int main(void)
 {
 	int ret;
-	bool sensor_ok = true;
-	bool bt_ok = true;
 
-	// // Suspend the QSPI NOR flash device to save power.
-    // const struct device * qspi_dev = DEVICE_DT_GET(DT_INST(0, nordic_qspi_nor));
-    // if (device_is_ready(qspi_dev))
-    // {
-    //     // Put the peripheral into suspended state.
-    //     int err = pm_device_action_run(qspi_dev, PM_DEVICE_ACTION_SUSPEND);
-    //     if (err)
-    //     {
-    //         printk("Failed to suspend QSPI NOR flash device: %d\n", err);
-    //     }
-    //     else
-    //     {
-    //         printk("QSPI NOR flash device suspended successfully\n");
-    //     }
-    // }
-    // else
-    // {
-    //     printk("QSPI NOR flash device is not ready\n");
-    // }
-
+	printk("main: start\n");
 
 	ret = soil_sensor_init();
+	printk("soil_sensor_init: %d\n", ret);
 	if (ret < 0)
 	{
-		sensor_ok = false;
+		return ret;
 	}
 
 	ret = bt_enable(NULL);
+	printk("bt_enable: %d\n", ret);
 	if (ret < 0)
 	{
-		bt_ok = false;
+		return ret;
 	}
 
-	if (bt_ok)
-	{
-		ret = soil_sensor_adv_seed();
-		if (ret < 0)
-		{
-			bt_ok = false;
-		}
-	}
-
-	while (true)
+	printk("sampling loop\n");
+	while (1)
 	{
 		soil_sensor_sample();
-		if (sensor_ok && soil_sensor_has_new_data())
+		if (soil_sensor_has_new_data())
 		{
 			ret = soil_sensor_adv_update();
+			printk("adv_update: %d\n", ret);
 			break;
 		}
 	}
+	
 
 	ret = bt_le_adv_start(adv_param, ad, ARRAY_SIZE(ad), NULL, 0);
+	printk("bt_le_adv_start: %d\n", ret);
 
-	k_sleep(K_MSEC(100));
+	k_sleep(K_MSEC(500));
 
 	bt_le_adv_stop();
+
+	printk("done\n");
+
 	// sys_poweroff();
 	return 0;
 }
