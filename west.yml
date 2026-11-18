@@ -1,0 +1,35 @@
+# West manifest for the soil-sensor workspace application.
+#
+# This repository is the manifest repository. Set up a workspace with:
+#
+#   west init -m https://github.com/<owner>/soil-sensor --mr main soil-sensor-ws
+#   cd soil-sensor-ws && west update
+#
+# or, from an existing clone placed inside an empty workspace directory:
+#
+#   west init -l soil-sensor && west update
+
+manifest:
+  self:
+    path: soil-sensor
+
+  remotes:
+    - name: ncs
+      url-base: https://github.com/nrfconnect
+    - name: u-blox
+      url-base: https://github.com/u-blox
+
+  projects:
+    - name: nrf
+      remote: ncs
+      repo-path: sdk-nrf
+      revision: v3.4.2
+      import: true
+
+    # Board support for EVK-NORA-B10 (ubx_evknorab10), which is not in mainline Zephyr.
+    # Added to BOARD_ROOT via zephyr/module.yml.
+    - name: u-blox-sho-OpenCPU
+      remote: u-blox
+      revision: c038dd5a27e10d949131a862a9513e4b6595412c
+      path: modules/bsp/u-blox
+      clone-depth: 1
