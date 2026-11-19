@@ -15,16 +15,17 @@ Install the matching toolchain (`nrfutil sdk-manager toolchain install --ncs-ver
 ```sh
 mkdir soil-sensor-ws && cd soil-sensor-ws
 git clone <this repo> soil-sensor
-west init -l soil-sensor
-west update
+uvx west init -l soil-sensor
+uvx west update
 ```
 
 Build and flash the sensor firmware:
 
 ```sh
 cd soil-sensor
-west build -b ubx_evknorab10/nrf5340/cpuapp devices/soil-sensor/firmware/v1
-west flash
+uv sync
+uv run west build -b ubx_evknorab10/nrf5340/cpuapp devices/soil-sensor/firmware/v1
+uv run west flash
 ```
 
 To bump the SDK, change the `nrf` revision in `west.yml` and run `west update`.

@@ -1,3 +1,5 @@
+.env
+
 /**/build*/
 # ESP-IDF build files
 build
