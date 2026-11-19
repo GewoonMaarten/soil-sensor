@@ -1,0 +1,6 @@
+name: soil-sensor
+build:
+  settings:
+    # u-blox board support (ubx_evknorab10), checked out by west (see west.yml).
+    # Registered here rather than in the app CMakeLists so sysbuild images see it too.
+    board_root: ../modules/bsp/u-blox/zephyr

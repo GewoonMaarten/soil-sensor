@@ -1,0 +1,41 @@
+name: Firmware
+
+on:
+  push:
+    branches: [main]
+    paths: &firmware-paths
+      - west.yml
+      - zephyr/**
+      - devices/soil-sensor/firmware/v1/**
+      - firmware-libs/**
+      - .github/workflows/firmware.yml
+  pull_request:
+    paths: *firmware-paths
+
+jobs:
+  build:
+    runs-on: ubuntu-24.04
+    # Nordic's toolchain image; keep the tag in sync with the nrf revision in west.yml
+    container: ghcr.io/nrfconnect/sdk-nrf-toolchain:v3.4.2
+    defaults:
+      run:
+        # The toolchain environment is set up in bash's profile
+        shell: bash
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          path: soil-sensor
+
+      - name: Set up west workspace
+        run: |
+          west init -l soil-sensor
+          west update --narrow -o=--depth=1
+
+      - name: Build
+        working-directory: soil-sensor
+        run: west build -b ubx_evknorab10/nrf5340/cpuapp devices/soil-sensor/firmware/v1
+
+      - uses: actions/upload-artifact@v7
+        with:
+          name: soil-sensor-firmware
+          path: soil-sensor/build/v1/zephyr/*.hex

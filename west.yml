@@ -1,0 +1,33 @@
+# West manifest for the soil-sensor workspace application.
+#
+# This repository is the manifest repository. Set up a workspace with:
+#
+#   west init -m https://github.com/<owner>/soil-sensor --mr main soil-sensor-ws
+#   cd soil-sensor-ws && west update
+#
+# or, from an existing clone placed inside an empty workspace directory:
+#
+#   west init -l soil-sensor && west update
+
+manifest:
+  self:
+    path: soil-sensor
+
+  remotes:
+    - name: ncs
+      url-base: https://github.com/nrfconnect
+    - name: u-blox
+      url-base: https://github.com/GewoonMaarten/
+
+  projects:
+    - name: nrf
+      remote: ncs
+      repo-path: sdk-nrf
+      revision: v3.4.2
+      import: true
+
+    - name: u-blox-sho-OpenCPU
+      remote: u-blox
+      revision: patch-1
+      path: modules/bsp/u-blox
+      clone-depth: 1
