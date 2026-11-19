@@ -1,8 +1,3 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = []
-# ///
 """Flash firmware to a device via `uv run west flash`.
 
 Must be run from the repository root after a successful build. Passes

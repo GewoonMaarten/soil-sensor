@@ -1,8 +1,3 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = []
-# ///
 """Build firmware for a device via `uv run west build`.
 
 Runs from the repository root and wraps the usual build invocation:

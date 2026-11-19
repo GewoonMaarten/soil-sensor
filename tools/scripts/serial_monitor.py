@@ -1,10 +1,3 @@
-#!/usr/bin/env -S uv run --script
-# /// script
-# requires-python = ">=3.12"
-# dependencies = [
-#   "pyserial>=3.5",
-# ]
-# ///
 """Monitor device serial output for debugging.
 
 Reads a serial port and prints timestamped lines. Designed for agent use:
