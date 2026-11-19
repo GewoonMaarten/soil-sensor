@@ -17,7 +17,7 @@ manifest:
     - name: ncs
       url-base: https://github.com/nrfconnect
     - name: u-blox
-      url-base: https://github.com/u-blox
+      url-base: https://github.com/GewoonMaarten/
 
   projects:
     - name: nrf
@@ -26,10 +26,8 @@ manifest:
       revision: v3.4.2
       import: true
 
-    # Board support for EVK-NORA-B10 (ubx_evknorab10), which is not in mainline Zephyr.
-    # Added to BOARD_ROOT via zephyr/module.yml.
     - name: u-blox-sho-OpenCPU
       remote: u-blox
-      revision: c038dd5a27e10d949131a862a9513e4b6595412c
+      revision: patch-1
       path: modules/bsp/u-blox
       clone-depth: 1
