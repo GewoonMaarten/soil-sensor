@@ -84,7 +84,7 @@ def parse_args() -> argparse.Namespace:
         "--timeout",
         type=float,
         default=5.0,
-        help="Scanner callback lifetime in seconds per run loop iteration.",
+        help="Seconds to scan before exiting (default 5; 0 = until Ctrl-C).",
     )
     parser.add_argument(
         "--auth-key-hex",
@@ -151,12 +151,9 @@ def freshness_status(packet: BeaconPacket, states: dict[int, FreshnessState]) ->
 
 
 async def main() -> None:
-    stop_event = asyncio.Event()
-
-
     args = parse_args()
     auth_key: bytes = args.auth_key_hex
-
+    stop_event = asyncio.Event()
 
     freshness_states: dict[int, FreshnessState] = {}
 
@@ -197,6 +194,8 @@ async def main() -> None:
         )
 
     async with BleakScanner(detection_callback=detection_callback) as scanner:
+        if args.timeout > 0:
+            asyncio.get_running_loop().call_later(args.timeout, stop_event.set)
         await stop_event.wait()
 
 if __name__ == "__main__":
