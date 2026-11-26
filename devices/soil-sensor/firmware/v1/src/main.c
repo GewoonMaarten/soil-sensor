@@ -207,7 +207,7 @@ int main(void)
 	ret = bt_le_adv_start(adv_param, ad, ARRAY_SIZE(ad), NULL, 0);
 	printk("bt_le_adv_start: %d\n", ret);
 
-	k_sleep(K_MSEC(500));
+	k_sleep(K_SECONDS(5));
 
 	bt_le_adv_stop();
 

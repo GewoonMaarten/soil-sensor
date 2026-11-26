@@ -80,29 +80,60 @@ Scans for the soil sensor BLE manufacturer beacon, validates its truncated
 HMAC-SHA256 tag, and prints authenticated raw readings. Use this to verify the
 sensor advertises and its measurements validate without touching the device.
 
-```
-uv run tools/scripts/read_soil_beacon.py
-uv run tools/scripts/read_soil_beacon.py --address <BLE-ADDR>
-uv run tools/scripts/read_soil_beacon.py --timeout 10 --company-id 0xFFFF
+The firmware advertises **exactly once** on boot for ~5 seconds, then idles.
+To re-read it, reset the board (see "Reset board" below) while the scanner is
+running. Start the scanner first, then reset so the advertisement window
+overlaps the scan. Multiple resets may be needed — BLE passive scanning can
+miss a short non-connectable advertisement, and `freshness=stale` or
+`replayed_boot_nonce` lines are suppressed, so only the first fresh packet per
+boot prints.
+
+```sh
+# Terminal A: scanner (auto-exits after --timeout seconds)
+uv run tools/scripts/read_soil_beacon.py --timeout 20
+
+# Terminal B (while A is scanning): reset to re-advertise
+uv run tools/scripts/reset_board.py
 ```
 
 Options:
 - `--address <BLE address>` only report a specific sensor
 - `--company-id <dec or hex>` (default `0xFFFF`)
-- `--timeout <sec>` scanner lifetime per run-loop iteration (default 5)
+- `--timeout <sec>` seconds to scan before exiting (default 5; 0 = until Ctrl-C)
 - `--auth-key-hex <hex>` HMAC key, must match the firmware key (default
   `2a5df318c74091e653ac743910bd86cf`, 16 bytes / 32 hex chars)
 
 Each line shows `address rssi dev boot freshness raw0 raw1 raw2`. Lines with
 `invalid authentication tag` or `unexpected payload length` indicate a
-misconfigured key or a non-matching advertiser. `stale` / `replayed_boot_nonce`
-lines are suppressed, so only fresh readings are printed.
+misconfigured key or a non-matching advertiser.
+
+## Reset board
+
+Reset the nRF5340 app core via the SEGGER J-Link debug probe. The firmware
+advertises its BLE beacon only once on boot, so reset to re-trigger it without
+power-cycling by hand.
+
+```sh
+uv run tools/scripts/reset_board.py
+uv run tools/scripts/reset_board.py --serial 000960171887
+uv run tools/scripts/reset_board.py --device nRF5340_XXAA_NET
+```
+
+Options:
+- `--serial <SN>` J-Link serial number (default `000960171887`)
+- `--device <target>` J-Link target (default `nRF5340_XXAA_APP`)
+- `--interface <if>` (default `SWD`)
+- `--speed <kHz>` (default 4000)
+- `--halt` halt the core after reset instead of letting it run
+
+Requires `JLinkExe` on PATH.
 
 ## Typical workflow
 
 1. `uv run tools/scripts/west_build.py --pristine` — clean build
 2. `uv run tools/scripts/west_flash.py` — flash to the connected device
 3. `uv run tools/scripts/serial_monitor.py --duration 15` — capture boot +
-   runtime logs
-4. `uv run tools/scripts/read_soil_beacon.py` — verify the sensor advertises
-   over BLE and readings validate
+   runtime logs (console is on the J-Link CDC, e.g. `/dev/ttyACM3`)
+4. Start `uv run tools/scripts/read_soil_beacon.py --timeout 20`, then run
+   `uv run tools/scripts/reset_board.py` in another terminal to re-advertise
+   and capture an authenticated reading
