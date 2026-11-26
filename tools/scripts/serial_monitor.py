@@ -27,6 +27,7 @@ DEFAULT_DURATION = 10.0
 VID_PIDS = {
     (0x1366, 0x1055): "SEGGER J-Link CDC (nRF DW/VCOM)",
     (0x1366, 0x0101): "SEGGER J-Link CDC (nRF52)",
+    (0x1366, 0x1065): "SEGGER J-Link CDC",
     (0x1915, 0x521F): "Nordic Semiconductor CDC",
     (0x1915, 0x5320): "Nordic Semiconductor CDC",
 }
@@ -73,6 +74,9 @@ def detect_port() -> str | None:
         for port in ports:
             if (port.vid, port.pid) == known:
                 return port.device
+    for port in ports:
+        if port.device.startswith(("/dev/ttyACM", "/dev/ttyUSB")):
+            return port.device
     return ports[0].device if ports else None
 
 
@@ -84,7 +88,7 @@ def print_ports() -> int:
     for port in ports:
         known = VID_PIDS.get((port.vid, port.pid), "")
         extras = " ".join(
-            f"{key}={value}" for key, value in (known, port.description) if value
+            f"{key}={value}" for key, value in (("known", known), ("description", port.description)) if value
         )
         print(f"{port.device}\t{extras}")
     return 0
